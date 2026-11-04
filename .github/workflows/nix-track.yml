@@ -1,0 +1,46 @@
+name: Track upstream release
+
+on:
+  schedule:
+    - cron: '37 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Read the latest release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release="$(gh api repos/openAnimeFlow/AnimeFlow/releases/latest)"
+          version="$(jq -r '.tag_name | ltrimstr("v")' <<<"$release")"
+          digest="$(jq -r --arg name "AnimeFlow-linux-${version}.tar.gz" '.assets[] | select(.name == $name) | .digest' <<<"$release")"
+          hash="$(nix hash convert --hash-algo sha256 --to sri "${digest#sha256:}")"
+          jq -n --arg version "$version" --arg hash "$hash" '{$version, $hash}' > nix/release.json
+
+      # A wrong hash or a library the package does not provide stops here, before the commit.
+      - name: Build
+        run: nix build .#animeflow --no-link
+
+      - name: Commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet nix/release.json; then
+            echo "Already at the latest release."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898583+github-actions[bot]@users.noreply.github.com'
+          git commit -m "chore(nix): update to $(jq -r .version nix/release.json)" nix/release.json
+          git push origin HEAD:nix-auto
