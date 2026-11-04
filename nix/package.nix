@@ -48,7 +48,7 @@
 }:
 
 let
-  # Written by .github/workflows/nix-update.yml on every release.
+  # Written by .github/workflows/nix-track.yml when upstream publishes a release.
   release = lib.importJSON ./release.json;
 in
 stdenv.mkDerivation (finalAttrs: {
