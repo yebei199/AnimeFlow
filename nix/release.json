@@ -1,4 +1,5 @@
 {
-  "version": "2.6.8",
-  "hash": "sha256-jReKz41XKXalhLBY7G7kH2md6OEZWYUiDMeZzkixy/8="
+  "version": "2.6.7",
+  "hash": "sha256-K0mLLfXv8YVcUP13c7PHVR33RhS7q0FXp3Cf8i55oRs=",
+  "skip": ["2.6.8"]
 }
