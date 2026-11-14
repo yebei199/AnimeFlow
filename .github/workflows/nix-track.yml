@@ -30,9 +30,15 @@ jobs:
             echo "Keeping ${current}: upstream latest is ${version}."
             exit 0
           fi
+          # Releases listed in "skip" are known broken here; stay put until a newer one ships.
+          if jq -e --arg v "$version" '.skip // [] | index($v)' nix/release.json >/dev/null; then
+            echo "Keeping ${current}: ${version} is in skip."
+            exit 0
+          fi
           digest="$(jq -r --arg name "AnimeFlow-linux-${version}.tar.gz" '.assets[] | select(.name == $name) | .digest' <<<"$release")"
           hash="$(nix hash convert --hash-algo sha256 --to sri "${digest#sha256:}")"
-          jq -n --arg version "$version" --arg hash "$hash" '{$version, $hash}' > nix/release.json
+          jq --arg version "$version" --arg hash "$hash" '.version = $version | .hash = $hash' nix/release.json > nix/release.json.new
+          mv nix/release.json.new nix/release.json
 
       # A wrong hash or a library the package does not provide stops here, before the commit.
       - name: Build
