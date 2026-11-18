@@ -16,6 +16,7 @@
   glib,
   glib-networking,
   gnutls,
+  gst_all_1,
   gtk3,
   harfbuzz,
   lcms2,
@@ -106,6 +107,11 @@ stdenv.mkDerivation (finalAttrs: {
     stdenv.cc.cc.lib
     wayland
     webkitgtk_4_1
+    # WebKit aborts on a <video> without autoaudiosink; wrapGAppsHook3 puts these on GST_PLUGIN_SYSTEM_PATH_1_0.
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gst-plugins-bad
+    gst_all_1.gst-libav
     xz
     zlib
   ];
